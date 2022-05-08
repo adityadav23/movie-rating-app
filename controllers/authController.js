@@ -1,8 +1,9 @@
 const AppError = require('../utils/appError')
 const User = require('../models/users.model')
 const jwt = require('jsonwebtoken')
-const sendEmail = require('../utils/email')
-const crypto = require('crypto')
+
+const MAX_PASSWORD_ATTEMPTS = 4;
+const THIRTY_MINS =30*60*1000;
 
 async function signUp(req, res){
     try {
@@ -40,16 +41,40 @@ async function login(req, res, next){
            return next(new AppError('Please provide email and passsword',400))
         }
         //find if user exist using email
-        const user = await User.findOne({email}).select('+password')
+        const user = await User.findOne({email}).select('+password +incorrectPasswordAttempt')
+        
         //if no user found
         if(!user){
             return next(new AppError('No matching email found',404))
          }
+         //incorret password attempts
+         let incorrectPasswordAttempt = user.incorrectPasswordAttempt;
          //check if password is correct
          const isCorrect =  await user.correctPassword(password, user.password)
          //wrong password
          if(!isCorrect){
-            return next(new AppError('Please put correct password',401))
+          const currentTime = Date.now();
+          if(user.incorrectPasswordAttempt >= 4  && ( currentTime - user.passwordAttemptedAt) < THIRTY_MINS){
+            res.status(401).json({
+              status : "failed",
+              message: `Incorrect Password, try after ${(currentTime - user.passwordAttemptedAt)/(1000*60)} minutes!!`
+            })
+          }
+           //wrong password attempt 4 then set activate fiedls to false for 30 mins
+           if(incorrectPasswordAttempt === MAX_PASSWORD_ATTEMPTS){
+           const user2 = await User.findOneAndUpdate(
+              {_id:user._id},
+              {
+                passwordAttemptedAt: Date.now(),                
+              })
+           }
+           //update incorrect Password count
+           const user3 = await User.findOneAndUpdate(
+              {_id:user._id},
+              {
+                incorrectPasswordAttempt: incorrectPasswordAttempt+1,
+              })
+              return next(new AppError('Please put correct password',401))
          }
          //get token
         const token = await user.createToken(user._id)
@@ -101,7 +126,8 @@ async function login(req, res, next){
 
 
 
-module.exports = {signUp, 
-    login,
-    protect,
+module.exports = {
+  signUp, 
+  login,
+  protect,
 }

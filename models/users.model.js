@@ -2,7 +2,6 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const crypto = require('crypto')
 
 const userSchema = new mongoose.Schema({
     name:{
@@ -15,6 +14,9 @@ const userSchema = new mongoose.Schema({
         unique: true,
         lowercase: true,
         validate: [validator.isEmail, 'Please provide your email']
+    },
+    age:{
+        type:Number,
     },
     password:{
         type: String,
@@ -32,19 +34,14 @@ const userSchema = new mongoose.Schema({
                 message: 'Passwords are not the same!'
         }
     },
-    passwordChangedAt:{
+    passwordAttemptedAt:{
         type: Date,
     },
     incorrectPasswordAttempt: {
         type: Number,
         default:0,
-        select:false,
     },
-    active:{
-        type: Boolean,
-        default: true,
-        select: false
-    }
+
 })
 
 //Saves hash of password and undefines confirmPassword field
