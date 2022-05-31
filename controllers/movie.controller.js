@@ -26,6 +26,7 @@ async function updateRating(req, res){
         }else{
             newRating = (oldRating*totalUsersRated + rating)/(totalUsersRated+1);
         }
+        //create a rating document record for rating done by user
         const ratingDoc = await Rating.create({
             rating:Number(rating),
             user:_id,
