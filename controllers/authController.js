@@ -62,14 +62,14 @@ async function login(req, res, next){
           }
            //wrong password attempt 4 then set activate fiedls to false for 30 mins
            if(incorrectPasswordAttempt === MAX_PASSWORD_ATTEMPTS){
-           const user2 = await User.findOneAndUpdate(
+            await User.findOneAndUpdate(
               {_id:user._id},
               {
                 passwordAttemptedAt: Date.now(),                
               })
            }
            //update incorrect Password count
-           const user3 = await User.findOneAndUpdate(
+            await User.findOneAndUpdate(
               {_id:user._id},
               {
                 incorrectPasswordAttempt: incorrectPasswordAttempt+1,

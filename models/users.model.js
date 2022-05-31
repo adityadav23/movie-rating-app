@@ -18,6 +18,15 @@ const userSchema = new mongoose.Schema({
     age:{
         type:Number,
     },
+    type:{
+        type:String,
+        enum:{
+            values:["admin", "user"],
+            message: '{Value} is not supported',
+        },
+        default: "user",
+
+    },
     password:{
         type: String,
         required: [true,'Please provide your password!'],
